@@ -1,0 +1,15 @@
+backend/.env
+**/node_modules
+frontend/dist
+frontend/build
+*.log
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+coverage
+
+**/.env
+**/.env.*
+!**/.env.example
+**/.vercel
