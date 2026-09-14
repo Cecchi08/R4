@@ -71,7 +71,7 @@ export interface Comment {
   message: string;
   created_at: string;
 }
-
+                                                                                                                                                                                                                                                                                                                                                                                          
 export interface Education { education_id: number; institution: string; title: string; start_year: number; end_year: number | null; status: string; }
 export interface Language { language_id: number; name: string; level: string; sort_order: number; }
 

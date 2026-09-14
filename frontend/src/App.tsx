@@ -24,7 +24,7 @@ function App() {
   const [transMode, setTransMode] = useState<null | 'loading' | 'unloading'>(null);
   const [unmounting, setUnmounting] = useState(false);
   const { theme, toggleTheme } = useTheme();
-
+ // Maneja la navegación entre secciones, evitando navegar a la misma sección
   const navigateTo = useCallback((section: SectionId) => {
     if (section === currentSection) {
       return;
@@ -32,7 +32,7 @@ function App() {
     setPendingSection(section);
     setTransMode('loading');
   }, [currentSection]);
-
+  // ir a la terminal desde cualquier sección, excepto la terminal misma
   const goTerminal = useCallback(() => {
     if (currentSection === 'terminal') {
       return;
@@ -41,6 +41,7 @@ function App() {
     setTransMode('unloading');
   }, [currentSection]);
 
+  // Maneja la transición de carga y descarga de secciones
   const handleTransDone = useCallback(() => {
     if (transMode === 'loading') {
       setCurrentSection(pendingSection as SectionId);
