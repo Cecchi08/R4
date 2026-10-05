@@ -82,6 +82,7 @@ export default function Terminal({ onNavigate, onToggleTheme }: TerminalProps) {
           type="text"
           className="term-input mono"
           aria-label="Input de comandos de terminal"
+          placeholder='Escribí "help" o "ayuda"'
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
