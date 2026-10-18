@@ -74,18 +74,34 @@ function dateLabel(value?: string | null) {
 
 export default function LandingPage({ onOpenGuestbook, onOpenAdmin }: Props) {
   const { data, errors, loading, reload } = usePortfolioData();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const { about, skills, experience, achievements, projects, education, languages, contact } = data;
   const name = about?.full_name || 'Portfolio';
   const interests = about?.interests?.split(';').map(item => item.trim()).filter(Boolean) ?? [];
 
+  useEffect(() => {
+    const updateScrollButton = () => setShowBackToTop(window.scrollY > 320);
+    window.addEventListener('scroll', updateScrollButton, { passive: true });
+    return () => window.removeEventListener('scroll', updateScrollButton);
+  }, []);
+
+  const gmailComposeUrl = contact?.email
+    ? `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(contact.email)}`
+    : undefined;
+  const closeMenu = () => setMenuOpen(false);
+
   return <div className="landing-page">
     <nav className="landing-nav" aria-label="Navegación principal">
       <a className="landing-nav-name" href="#inicio">{name}</a>
-      <div className="landing-nav-links">
-        <a href="#sobre-mi">Sobre mí</a><a href="#habilidades">Habilidades</a><a href="#experiencia">Experiencia</a>
-        <a href="#logros">Logros</a><a href="#proyectos">Proyectos</a><a href="#educacion">Educación</a><a href="#idiomas">Idiomas</a><a href="#contacto">Contacto</a>
+      <div className={`landing-nav-links ${menuOpen ? 'is-open' : ''}`} id="landing-navigation">
+        <a href="#sobre-mi" onClick={closeMenu}>Sobre mí</a><a href="#habilidades" onClick={closeMenu}>Habilidades</a><a href="#experiencia" onClick={closeMenu}>Experiencia</a>
+        <a href="#logros" onClick={closeMenu}>Logros</a><a href="#proyectos" onClick={closeMenu}>Proyectos</a><a href="#educacion" onClick={closeMenu}>Educación</a><a href="#idiomas" onClick={closeMenu}>Idiomas</a><a href="#contacto" onClick={closeMenu}>Contacto</a>
       </div>
-      <a className="landing-nav-cta" href="#contacto">Hablemos <span aria-hidden="true">↗</span></a>
+      <a className="landing-nav-cta" href="#contacto" onClick={closeMenu}>Hablemos <span aria-hidden="true">↗</span></a>
+      <button className={`landing-menu-toggle ${menuOpen ? 'is-open' : ''}`} type="button" aria-label={menuOpen ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={menuOpen} aria-controls="landing-navigation" onClick={() => setMenuOpen(open => !open)}>
+        <span /><span /><span />
+      </button>
     </nav>
 
     <main>
@@ -97,7 +113,7 @@ export default function LandingPage({ onOpenGuestbook, onOpenAdmin }: Props) {
           {(about?.profile || about?.description) && <p className="hero-description">{about.profile || about.description}</p>}
           <div className="hero-actions">
             <a className="landing-button primary" href="#proyectos">Ver proyectos <span aria-hidden="true">↓</span></a>
-            {contact?.email && <a className="landing-button secondary" href={`mailto:${contact.email}`}>Contactarme <span aria-hidden="true">↗</span></a>}
+            {gmailComposeUrl && <a className="landing-button secondary" href={gmailComposeUrl} target="_blank" rel="noopener noreferrer">Contactarme por Gmail <span aria-hidden="true">↗</span></a>}
           </div>
           {contact?.public_location && <p className="hero-location"><span aria-hidden="true">⌖</span> {contact.public_location}</p>}
         </div>
@@ -173,9 +189,10 @@ export default function LandingPage({ onOpenGuestbook, onOpenAdmin }: Props) {
       </section>
 
       <section className="landing-contact" id="contacto"><div><p className="landing-eyebrow">07 / SIGUIENTE PASO</p><h2>¿Hablamos?</h2><p>Estoy abierto a conversar sobre oportunidades y proyectos.</p></div>
-        <div className="contact-actions">{contact?.email && <a className="landing-button primary" href={`mailto:${contact.email}`}>Enviar un email <span aria-hidden="true">↗</span></a>}{contact?.github_url && <a href={contact.github_url} target="_blank" rel="noopener noreferrer">GitHub ↗</a>}{contact?.linkedin_url && <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>}</div>
+        <div className="contact-actions">{gmailComposeUrl && <a className="landing-button primary" href={gmailComposeUrl} target="_blank" rel="noopener noreferrer">Enviar un mensaje por Gmail <span aria-hidden="true">↗</span></a>}{contact?.github_url && <a href={contact.github_url} target="_blank" rel="noopener noreferrer">GitHub ↗</a>}{contact?.linkedin_url && <a href={contact.linkedin_url} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a>}</div>
       </section>
     </main>
     <footer className="landing-footer"><span>© {new Date().getFullYear()} {name}</span><div><button type="button" onClick={onOpenGuestbook}>Libro de visitas</button><button type="button" onClick={onOpenAdmin}>Administrar</button><a href="#inicio">Volver arriba ↑</a></div></footer>
+    {showBackToTop && <button className="back-to-top" type="button" aria-label="Volver arriba" title="Volver arriba" onClick={() => window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' })}>↑</button>}
   </div>;
 }
