@@ -15,15 +15,32 @@ import GuestbookSection from './sections/GuestbookSection';
 import ContactSection from './sections/ContactSection';
 import AdminSection from './sections/AdminSection';
 import type { TerminalSection } from './hooks/useTerminal';
+import LandingPage from './components/LandingPage';
 
-type SectionId = 'terminal' | TerminalSection;
+type SectionId = 'landing' | 'terminal' | TerminalSection;
+type ViewMode = 'landing' | 'terminal';
+const MODE_KEY = 'portfolio-view-mode';
+
+function getInitialMode(): ViewMode {
+  try { return localStorage.getItem(MODE_KEY) === 'terminal' ? 'terminal' : 'landing'; }
+  catch { return 'landing'; }
+}
 
 function App() {
-  const [currentSection, setCurrentSection] = useState<SectionId>('terminal');
+  const [mode, setMode] = useState<ViewMode>(getInitialMode);
+  const [currentSection, setCurrentSection] = useState<SectionId>(() => getInitialMode() === 'terminal' ? 'terminal' : 'landing');
   const [pendingSection, setPendingSection] = useState<SectionId | null>(null);
   const [transMode, setTransMode] = useState<null | 'loading' | 'unloading'>(null);
   const [unmounting, setUnmounting] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const changeMode = useCallback((next: ViewMode) => {
+    setMode(next);
+    try { localStorage.setItem(MODE_KEY, next); } catch { /* La preferencia vive en memoria si storage está bloqueado. */ }
+    setCurrentSection(next);
+    setPendingSection(null);
+    setTransMode(null);
+    setUnmounting(false);
+  }, []);
  // Maneja la navegación entre secciones, evitando navegar a la misma sección
   const navigateTo = useCallback((section: SectionId) => {
     if (section === currentSection) {
@@ -57,13 +74,13 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && currentSection !== 'terminal') {
+      if (mode === 'terminal' && e.key === 'Escape' && currentSection !== 'terminal') {
         goTerminal();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentSection, goTerminal]);
+  }, [mode, currentSection, goTerminal]);
 
   const renderSection = () => {
     const sectionWrapClass = unmounting ? 'ani-unload' : '';
@@ -75,6 +92,8 @@ function App() {
             onToggleTheme={toggleTheme}
           />
         );
+      case 'landing':
+        return <LandingPage onOpenGuestbook={() => setCurrentSection('guestbook')} onOpenAdmin={() => setCurrentSection('admin')} />;
       case 'education':
         return <div className={sectionWrapClass}><EducationSection onBack={goTerminal} /></div>;
       case 'languages':
@@ -94,11 +113,11 @@ function App() {
           </div>
         );
       case 'guestbook':
-        return <div className={sectionWrapClass}><GuestbookSection onBack={goTerminal} /></div>;
+        return <div className={sectionWrapClass}><GuestbookSection onBack={() => setCurrentSection(mode === 'landing' ? 'landing' : 'terminal')} /></div>;
       case 'contact':
         return <div className={sectionWrapClass}><ContactSection onBack={goTerminal} /></div>;
       case 'admin':
-        return <div className={sectionWrapClass}><AuthProvider><AdminSection onBack={goTerminal} /></AuthProvider></div>;
+        return <div className={sectionWrapClass}><AuthProvider><AdminSection onBack={() => setCurrentSection(mode === 'landing' ? 'landing' : 'terminal')} /></AuthProvider></div>;
       default:
         return null;
     }
@@ -107,7 +126,15 @@ function App() {
   const transModule = (pendingSection ?? currentSection) as string;
 
   return (
-    <div className={`app-shell tech-grid scanlines`} data-theme={theme}>
+    <div className={`app-shell ${mode === 'terminal' ? 'tech-grid scanlines' : 'landing-shell'}`} data-theme={theme}>
+      <header className="mode-bar" aria-label="Preferencias de interfaz">
+        <a className="mode-brand" href={mode === 'landing' ? '#inicio' : undefined} onClick={mode === 'landing' ? undefined : () => changeMode('landing')}>MC<span>.</span></a>
+        <div className="mode-controls" role="group" aria-label="Modo de navegación">
+          <button type="button" className={`mode-option ${mode === 'landing' ? 'active' : ''}`} aria-pressed={mode === 'landing'} onClick={() => changeMode('landing')}>Portfolio</button>
+          <button type="button" className={`mode-option ${mode === 'terminal' ? 'active' : ''}`} aria-pressed={mode === 'terminal'} onClick={() => changeMode('terminal')}>Terminal</button>
+        </div>
+        <button type="button" className="theme-toggle" onClick={toggleTheme} aria-label={`Cambiar a tema ${theme === 'dark' ? 'claro' : 'oscuro'}`}>{theme === 'dark' ? '☼' : '☾'}</button>
+      </header>
       {transMode !== null && (
         <TransitionLayer module={transModule} phase={transMode} onDone={handleTransDone} />
       )}

@@ -35,6 +35,7 @@ export interface Experience {
   organization?: string;
   start_date: string;
   end_date?: string | null;
+  status?: string;
   description?: string;
   technologies?: string[];
   sort_order: number;
